@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://eendrachtulft.nl/sitemap-index.xml

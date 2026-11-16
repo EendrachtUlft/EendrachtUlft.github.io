@@ -1,0 +1,42 @@
+# Apache (PHP-host) configuratie voor de statische Astro-build.
+# Bron: docs/urls-and-redirects.md §5 en docs/deployment.md.
+# Vereist mod_rewrite, mod_alias, mod_headers, mod_expires (standaard bij de meeste hosts).
+
+DirectoryIndex index.html
+Options -Indexes
+
+# Alle URL's eindigen op / (trailingSlash: 'always'); Apache's DirectorySlash doet dit voor mappen.
+DirectorySlash On
+
+<IfModule mod_alias.c>
+  # Redirects voor oude WordPress-URL's
+  RedirectMatch 301 ^/home/?$ /
+  RedirectMatch 301 ^/fotos/?$ /home/fotos/
+  RedirectMatch 301 ^/agenda(-2021)?/?$ /events/
+  RedirectMatch 301 ^/wp-sitemap.*\.xml$ /sitemap-index.xml
+  RedirectMatch 301 ^/(feed|comments/feed|events/feed)/?$ /
+  RedirectMatch 301 ^/category/[^/]+/feed/?$ /
+  RedirectMatch 301 ^/author/.*$ /
+  RedirectMatch 301 ^/mec-category/.*$ /events/
+</IfModule>
+
+# Let op: /wp-content/uploads/ staat nog op de WordPress-host; zie docs/deployment.md (uploads-caveat).
+
+ErrorDocument 404 /404.html
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  # Alleen /_astro/ heeft gehashte bestandsnamen; overige bestanden korter cachen
+  ExpiresDefault "access plus 1 week"
+  <FilesMatch "\.(html|xml|txt)$">
+    ExpiresDefault "access plus 10 minutes"
+  </FilesMatch>
+  <If "%{REQUEST_URI} =~ m#^/_astro/#">
+    ExpiresDefault "access plus 1 year"
+  </If>
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
